@@ -165,19 +165,3 @@ class PolynomialRegression:
         X_poly = self.polynomial_features(X)
         X_b = np.c_[np.ones((X_poly.shape[0], 1)), X_poly]
         return X_b.dot(self.coef)
-
-
-
-# Example usage
-if __name__ == "__main__":
-    np.random.seed(0)
-    X = 2 * np.random.rand(100, 1)
-    y = 4 + 3 * X + 1.5 * X**2 + np.random.randn(100, 1)
-
-    poly_regression = PolynomialRegression(degree=2)
-    poly_regression.fit(X, y)
-
-    new_X = np.linspace(0, 2, 100).reshape(-1, 1)
-    predicted_y = poly_regression.predict(new_X)
-
-    print("Coefficients:", poly_regression.coef)
