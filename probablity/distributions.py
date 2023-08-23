@@ -269,4 +269,3 @@ def gamma_function(x):
     """
     return scipy.special.gamma(x)
 
-print(poisson_distribution(3, 5))
