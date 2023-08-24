@@ -633,3 +633,68 @@ class SGDRegressor:
         """
         X_b = np.c_[np.ones((X.shape[0], 1)), X]
         return X_b.dot(self.coef)
+    
+
+class LogisticRegression:
+    """
+    A simple implementation of Logistic Regression using gradient descent.
+    
+    Parameters:
+        learning_rate (float): The learning rate for gradient descent. Default is 0.01.
+        num_iterations (int): The number of iterations for gradient descent. Default is 1000.
+    """
+    def __init__(self, learning_rate=0.01, num_iterations=1000):
+        self.learning_rate = learning_rate
+        self.num_iterations = num_iterations
+        self.weights = None
+        self.bias = None
+    
+    def sigmoid(self, z):
+        """
+        Sigmoid activation function.
+        
+        Parameters:
+            z (float or numpy array): The input to the sigmoid function.
+        
+        Returns:
+            float or numpy array: The output of the sigmoid function.
+        """
+        return 1 / (1 + np.exp(-z))
+    
+    def fit(self, X, y):
+        """
+        Fit the logistic regression model to the given training data.
+        
+        Parameters:
+            X (numpy array): Training data features of shape (num_samples, num_features).
+            y (numpy array): Target values of shape (num_samples,).
+        """
+        num_samples, num_features = X.shape
+        self.weights = np.zeros(num_features)
+        self.bias = 0
+        
+        # Gradient descent
+        for _ in range(self.num_iterations):
+            linear_model = np.dot(X, self.weights) + self.bias
+            y_pred = self.sigmoid(linear_model)
+            
+            dw = (1/num_samples) * np.dot(X.T, (y_pred - y))
+            db = (1/num_samples) * np.sum(y_pred - y)
+            
+            self.weights -= self.learning_rate * dw
+            self.bias -= self.learning_rate * db
+    
+    def predict(self, X):
+        """
+        Predict the class labels for the given data.
+        
+        Parameters:
+            X (numpy array): Data features of shape (num_samples, num_features).
+        
+        Returns:
+            list: Predicted class labels (0 or 1) for each sample.
+        """
+        linear_model = np.dot(X, self.weights) + self.bias
+        y_pred = self.sigmoid(linear_model)
+        y_pred_class = [1 if i > 0.5 else 0 for i in y_pred]
+        return y_pred_class
