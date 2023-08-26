@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 
 class LinearRegression:
 
@@ -672,18 +673,25 @@ class LogisticRegression:
         num_samples, num_features = X.shape
         self.weights = np.zeros(num_features)
         self.bias = 0
-        
+        iterations_range = tqdm(range(self.num_iterations), desc="Training", unit="iteration")
         # Gradient descent
-        for _ in range(self.num_iterations):
+        for _ in iterations_range:
             linear_model = np.dot(X, self.weights) + self.bias
             y_pred = self.sigmoid(linear_model)
-            
             dw = (1/num_samples) * np.dot(X.T, (y_pred - y))
             db = (1/num_samples) * np.sum(y_pred - y)
-            
             self.weights -= self.learning_rate * dw
             self.bias -= self.learning_rate * db
-    
+            iterations_range.set_postfix({"Loss": self.calculate_loss(X, y)})
+
+    def calculate_loss(self, X, y):
+        linear_model = np.dot(X, self.weights) + self.bias
+        y_pred = self.sigmoid(linear_model)
+        epsilon = 1e-15  # Small value to prevent log(0)
+        loss = -np.mean(y * np.log(y_pred + epsilon) + (1 - y) * np.log(1 - y_pred + epsilon))
+        return loss
+
+
     def predict(self, X):
         """
         Predict the class labels for the given data.
