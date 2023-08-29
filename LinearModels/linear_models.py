@@ -614,10 +614,11 @@ class SGDRegressor:
         - X (numpy.ndarray): Input features of shape (n_samples, n_features).
         - y (numpy.ndarray): Target values of shape (n_samples,).
         """
-        n_samples, n_features = X.shape
+        X_b = np.c_[np.ones((X.shape[0], 1)), X]
+        n_samples, n_features = X_b.shape
         np.random.seed(self.random_state)
         self.coef = np.random.randn(n_features, 1)
-        X_b = np.c_[np.ones((n_samples, 1)), X]
+        
         for _ in range(self.max_iter):
             gradient = (2 / n_samples) * X_b.T.dot(X_b.dot(self.coef) - y)
             self.coef = self.coef - self.learning_rate * gradient
