@@ -707,3 +707,18 @@ class LogisticRegression:
         y_pred = self.sigmoid(linear_model)
         y_pred_class = [1 if i > 0.5 else 0 for i in y_pred]
         return y_pred_class
+    
+    def predict_proba(self, X):
+        """
+        Predict the class probabilities for the given data.
+
+        Parameters:
+            X (numpy array): Data features of shape (num_samples, num_features).
+
+        Returns:
+            numpy array: Predicted class probabilities for each sample and class.
+                         Shape: (num_samples, num_classes)
+        """
+        linear_model = np.dot(X, self.weights) + self.bias
+        y_pred = self.sigmoid(linear_model)
+        return y_pred
