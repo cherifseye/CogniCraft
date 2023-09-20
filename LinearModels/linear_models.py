@@ -651,17 +651,29 @@ class LogisticRegression:
         self.weights = None
         self.bias = None
     
-    def sigmoid(self, z):
+    @staticmethod
+    def sigmoid(z):
         """
-        Sigmoid activation function.
-        
+        Sigmoid activation function.    
+
         Parameters:
-            z (float or numpy array): The input to the sigmoid function.
-        
+            z (float or numpy array): The input to the sigmoid function.    
+
         Returns:
             float or numpy array: The output of the sigmoid function.
         """
-        return 1 / (1 + np.exp(-z))
+        if isinstance(z, (int, float)):  # Handle scalar input
+            if z >= 0:
+                return 1 / (1 + np.exp(-z))
+            else:
+                return np.exp(z) / (1 + np.exp(z))
+        else:  # Handle array input
+            sigmoid_values = np.empty_like(z)
+            positive_mask = z >= 0
+            sigmoid_values[positive_mask] = 1 / (1 + np.exp(-z[positive_mask]))
+            sigmoid_values[~positive_mask] = np.exp(z[~positive_mask]) / (1 + np.exp(z[~positive_mask]))
+            return sigmoid_values
+
     
     def fit(self, X, y):
         """
