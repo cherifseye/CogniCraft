@@ -55,6 +55,19 @@ def multinomial_coefficient(n, x):
     x_factorials = np.prod([np.math.factorial(xi) for xi in x])
     return np.math.factorial(n) / x_factorials
 
+def gamma_function(x):
+    """
+    Calculate the gamma function for a given value x.
+
+    Parameters:
+    x (float): Input value.
+
+    Returns:
+    float: Gamma function value.
+    """
+    return scipy.special.gamma(x)
+
+
 def binomial_distribution(n, k, theta):
     """
     Calculate the probability of k successes in n trials using the binomial distribution.
@@ -70,18 +83,18 @@ def binomial_distribution(n, k, theta):
     return binomial_coefficient(n, k) * (theta ** k) * ((1 - theta) ** (n - k))
 
 
-def calculate_multinomial_distribution(n, x, theta):
+def calculate_multinomial_distribution(x, theta):
     """
     Calculate the multinomial distribution value for given parameters.
 
     Parameters:
-    n (int): Total number of trials.
-    x (numpy.ndarray): Array of counts for each outcome.
+    x (numpy.ndarray): (x_1, ... x_k) numpy array where x_j the number of times side j occurs.
     theta (numpy.ndarray): Array of probabilities for each outcome.
 
     Returns:
     float: Multinomial distribution value.
     """
+    n = np.sum(x)
     coefficient = multinomial_coefficient(n, x)
     theta_factorials = np.prod(theta**x)
     
@@ -89,7 +102,7 @@ def calculate_multinomial_distribution(n, x, theta):
     return result
     
 
-def bernoulli_distribution(x, theta):
+def bernoulli_distribution(x:int, theta:float) -> float:
     """
     Calculate the probability of a Bernoulli trial.
 
@@ -105,7 +118,7 @@ def bernoulli_distribution(x, theta):
     return 1 - theta
 
 
-def multinoulli_distribution(x, theta):
+def multinoulli_distribution(x:np.ndarray, theta:float):
     """
     Calculate the multinoulli distribution value for a given outcome vector and probability vector.
 
@@ -120,12 +133,11 @@ def multinoulli_distribution(x, theta):
     if len(x) != len(theta):
         raise ValueError("x and theta must have the same length")
 
-    # Calculate the product of theta[j] for each j where x[j] == 1
-    return np.prod([theta[j] for j in range(len(x)) if x[j] == 1])
+    return np.prod([theta[j]**x[j] for j in range(len(x))])
 
 
 
-def poisson_distribution(x, l):
+def poisson_distribution(x:np.ndarray, l:float) -> np.ndarray:
     """
     Calculate the probability of observing x events in a Poisson distribution.
 
@@ -156,7 +168,7 @@ def empirical_distribution(D, A):
 
     return (np.sum([dirac_measure(x, A) for x in D])) / len(D)
 
-def gaussian_distribution(X):
+def gaussian_distribution(X:np.ndarray, *quantiles) ->np.ndarray:
     """
     Calculate the Gaussian (normal) distribution for a set of data points.
 
@@ -166,29 +178,35 @@ def gaussian_distribution(X):
     Returns:
     numpy.ndarray: Array of Gaussian distribution values.
     """
-    var = np.var(X)
-    mean = np.mean(X)
+    if quantiles:
+        var = quantiles[1]
+        mean = quantiles[0]
+    else:
+        var = np.var(X)
+        mean = np.mean(X)
     return (1 / np.sqrt(2 * np.pi * var)) * np.exp(-(1 / (2 * var)) * (X - mean)**2)
 
 
-def student_T_distribution(X, df):
+def student_T_distribution(X:np.ndarray, mean:float, sigma_square:float, nu:int):
     """
     Calculate the Student's t-distribution for a set of data points.
 
     Parameters:
     X (numpy.ndarray): Array of data points.
-    df (int): Degrees of freedom parameter.
+    *quantiles: Mu(Mean), _sigma_square(Scale parameter)
+    nu (int): Degrees of freedom parameter.
 
     Returns:
     numpy.ndarray: Array of Student's t-distribution values.
     """
-    constant = gamma_function(df + 1 / 2) / (np.sqrt(df * np.pi) * gamma_function(df / 2))
-    pdf_values = constant * (1 + (X**2 / df))**(-0.5 * (df + 1))
-    return pdf_values
+
+    assert(nu > 0 and sigma_square > 0)
+    coefficient = gamma_function((nu + 1) / 2) / (np.sqrt(nu*np.pi) * gamma_function(nu/2))
+    return coefficient * (1 + ((1/nu) * ((X - mean) / np.sqrt(sigma_square))**2)) **(-((nu + 1)/2))
 
 
 
-def laplace_distribution(X, mu, b):
+def laplace_distribution(X:np.ndarray, mean:float, b:float)->np.ndarray:
     """
     Calculate the Laplace distribution for a set of data points.
 
@@ -200,8 +218,22 @@ def laplace_distribution(X, mu, b):
     Returns:
     numpy.ndarray: Array of Laplace distribution values.
     """
-    return (1 / (2 * b)) * np.exp(-np.abs(X - mu) / b)
+    return (1 / (2 * b)) * np.exp(-np.abs(X - mean) / b)
 
+def gamma_distribution(X:np.ndarray, shape:float, rate:float) ->np.ndarray:
+    """
+    Calculate the Laplace distribution for a set of data points.
+
+    Parameters:
+    X (numpy.ndarray): Array of data points positve.
+    shape (float > 0):
+    rate (float > 0): 
+
+    Returns:
+    numpy.ndarray: Array of Gamma distribution values.
+    """
+    assert(np.all(X >= 0) and shape > 0 and rate > 0)
+    return (rate**shape / gamma_function(shape)) * X**(shape-1) * np.exp(-X*rate)
 
 def beta_distribution(X, a, b):
     """
@@ -215,12 +247,32 @@ def beta_distribution(X, a, b):
     Returns:
     numpy.ndarray: Array of Beta distribution values.
     """
+    assert(a>0 and b>0)
     B_a_b = (gamma_function(a) * gamma_function(b)) / gamma_function(a + b)
     return X**(a - 1) * (1 - X)**(b - 1) / B_a_b
-import numpy as np
 
-def multivariate_normal(X, mean, cov_matrix):
+def pareto_distribution(X:np.ndarray, k:float, m:float) ->np.ndarray:
     """
+    Calculate the Pareto distribution functions.
+    The pareto distribution is used ti model the distributions of quantities that exhibit long tails
+
+    Parameters:
+    X (numpy array): Array of data points
+    m (float): constant parameter 
+    k (float): control paramter: k -> oo P(x) = dirac(x - m)
+
+    Returns:
+    numpy.ndarray: Array of Pareto distribution values
+    """
+
+    pareto_dist = np.zeros_like(X)
+    mask = X >= m
+    pareto_dist[mask] = (k * m**k) /  X[mask]**(k + 1)
+    return pareto_dist
+
+"""
+def multivariate_normal(X, mean, cov_matrix):
+    /*
     Calculate the multivariate normal probability density function.
 
     This function computes the probability density function of a multivariate normal distribution
@@ -239,7 +291,8 @@ def multivariate_normal(X, mean, cov_matrix):
     mean = np.array([2, 3])
     cov_matrix = np.array([[1, 0.5], [0.5, 1]])
     probabilities = multivariate_normal(X, mean, cov_matrix)
-    """
+    */
+
     if mean.shape[0] != cov_matrix.shape[0]:
         raise ValueError("Mean vector dimension must match the dimension of the covariance matrix")
 
@@ -256,16 +309,6 @@ def multivariate_normal(X, mean, cov_matrix):
     exponent = -0.5 * np.sum(X_minus_mean.dot(inv_cov_matrix) * X_minus_mean, axis=1)
     probabilities = constant * np.exp(exponent)
     return probabilities
+"""
 
-def gamma_function(x):
-    """
-    Calculate the gamma function for a given value x.
-
-    Parameters:
-    x (float): Input value.
-
-    Returns:
-    float: Gamma function value.
-    """
-    return scipy.special.gamma(x)
 
