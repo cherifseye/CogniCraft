@@ -517,6 +517,7 @@ class PolynomialLassoRegression:
         Transform input features into polynomial features.
 
         Parameters:
+        
             X (numpy.ndarray): Input feature matrix.
 
         Returns:

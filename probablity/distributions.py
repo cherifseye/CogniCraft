@@ -270,45 +270,39 @@ def pareto_distribution(X:np.ndarray, k:float, m:float) ->np.ndarray:
     pareto_dist[mask] = (k * m**k) /  X[mask]**(k + 1)
     return pareto_dist
 
-"""
-def multivariate_normal(X, mean, cov_matrix):
-    /*
-    Calculate the multivariate normal probability density function.
 
-    This function computes the probability density function of a multivariate normal distribution
-    given the data points, mean, and covariance matrix.
+def multivariate_gaussian(x, mean, covariance):
+    """
+    Computes the value of multivariate Gaussian of a distribution at point x
 
     Parameters:
-    X (numpy.ndarray): Data points as a matrix of shape (n_samples, n_features).
-    mean (numpy.ndarray): Mean vector of the distribution with shape (n_features,).
-    cov_matrix (numpy.ndarray): Covariance matrix of the distribution with shape (n_features, n_features).
+    -x: Point at which to compute the probablity density function.
+    -mean: mean vector of the distribution
+    -covariance: Covariance matrix of the distribution.
 
-    Returns:
-    numpy.ndarray: Array of probability density values for each data point.
-
-    Example:
-    X = np.array([[1, 2], [3, 4], [5, 6]])
-    mean = np.array([2, 3])
-    cov_matrix = np.array([[1, 0.5], [0.5, 1]])
-    probabilities = multivariate_normal(X, mean, cov_matrix)
-    */
-
-    if mean.shape[0] != cov_matrix.shape[0]:
-        raise ValueError("Mean vector dimension must match the dimension of the covariance matrix")
-
-    k = mean.shape[0]
-    det_cov = np.linalg.det(cov_matrix)
-    if det_cov <= 0:
-        raise ValueError("Covariance matrix must be positive definite")
-
-    constant = 1.0 / ((2 * np.pi) ** (0.5 * k) * det_cov)
-
-    X_minus_mean = X - mean
-    inv_cov_matrix = np.linalg.inv(cov_matrix)
-
-    exponent = -0.5 * np.sum(X_minus_mean.dot(inv_cov_matrix) * X_minus_mean, axis=1)
-    probabilities = constant * np.exp(exponent)
-    return probabilities
-"""
+    Returns: 
+    -Value of the multivariate Gaussion distribution at x
+    """
+    #assert(len(mean == x.shape))
+    d = len(mean)
+    coeff = 1 / np.sqrt((2 * np.pi)**d * np.linalg.det(covariance))
+    exponent = -0.5 * np.dot(np.dot((x - mean).T, np.linalg.inv(covariance)), (x - mean))
+    return coeff * np.exp(exponent)
 
 
+def multivariate_StudentT_distribution(x, mean, scale_matrix, nu):
+    """
+    Robust alternative to the MVN
+
+    Parameters:
+    -x: Point at which to compute the probablity desnity function.
+    -mean: mean vector of the distribution
+    -scale_matrix: Scale Matrix
+    nu:
+    """
+
+    d = len(mean)
+    coeff1 = (gamma_function(nu/2 + d/2) / gamma_function(nu/2)) * (1/np.sqrt(np.pi*np.linalg.det(nu*scale_matrix)))
+    coeff2 = (1 + np.dot(np.dot((x - mean).T, np.linalg.inv(nu*scale_matrix)), (x - mean)))** (-(nu + d) / 2)
+
+    return coeff1 * coeff2
